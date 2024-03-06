@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  php:
+    build: ./docker/php
+    container_name: phpunit-container
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: "tail -f /dev/null"
+    depends_on:
+      - mysql
+      - redis
+      - eventstore
+    networks:
+      - phpnet
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: changeme
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: changeme
+    ports:
+      - "3306:3306"
+    networks:
+      - phpnet
+
+  redis:
+    image: redis:latest
+    container_name: redis-container
+    ports:
+      - "6379:6379"
+    networks:
+      - phpnet
+
+  eventstore:
+    image: eventstore/eventstore:release-5.0.11
+    container_name: eventstore-container
+    ports:
+      - "2113:2113"
+      - "1113:1113"
+    environment:
+      EVENTSTORE_RUN_PROJECTIONS: All
+      EVENTSTORE_START_STANDARD_PROJECTIONS: True
+      EVENTSTORE_EXT_HTTP_PORT: 2113
+      EVENTSTORE_EXT_TCP_PORT: 1113
+    networks:
+      - phpnet
+
+networks:
+  phpnet:
+    driver: bridge
