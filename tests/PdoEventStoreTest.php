@@ -46,7 +46,7 @@ class PdoEventStoreTest extends AbstractEventStoreTestCase
         );
     }
 
-    public function testStoreEvent()
+    public function testReplyFromPositionZero(): void
     {
         $eventStore = $this->createPdoEventStore();
         $domainEvents = $this->getEvents();
