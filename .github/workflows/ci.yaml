@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php-version: ['8.1', '8.2', '8.3']
+        php-version: ['8.2', '8.3']
 
     steps:
     - uses: actions/checkout@v4
@@ -68,13 +68,13 @@ jobs:
 
     - name: Run PHPUnit
       run: |
-        if [[ ${{ matrix.php-version }} == '8.1' ]]; then
+        if [[ ${{ matrix.php-version }} == '8.2' ]]; then
           bin/phpunit --coverage-clover=coverage.xml
         else
           bin/phpunit
         fi
     - name: Code Coverage Report
-      if: success() && matrix.php-version == '8.1'
+      if: success() && matrix.php-version == '8.2'
       uses: codecov/codecov-action@v4
 
   cs-stan:
