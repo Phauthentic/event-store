@@ -7,8 +7,13 @@ namespace Phauthentic\EventStore\Tests;
 use PDO;
 use Phauthentic\EventStore\EventFactory;
 use Phauthentic\EventStore\PdoEventStore;
+use Phauthentic\EventStore\ReplyFromPositionQuery;
 use Phauthentic\EventStore\Serializer\SerializeSerializer;
+use Ramsey\Uuid\Uuid;
 
+/**
+ *
+ */
 class PdoEventStoreTest extends AbstractEventStoreTestCase
 {
     public function setUp(): void
@@ -23,7 +28,7 @@ class PdoEventStoreTest extends AbstractEventStoreTestCase
 
     protected function createPdo(): PDO
     {
-        $host = getenv('DB_HOST') ?: '127.0.0.1';
+        $host = getenv('DB_HOST') ?: 'mysql-container';
         $dbname = getenv('DB_DATABASE') ?: 'test';
         $user = getenv('DB_USER') ?: 'root';
         $pass = getenv('DB_PASSWORD') ?: 'changeme';
@@ -48,17 +53,43 @@ class PdoEventStoreTest extends AbstractEventStoreTestCase
 
     public function testReplyFromPositionZero(): void
     {
+        $aggregateId = Uuid::uuid4()->toString();
         $eventStore = $this->createPdoEventStore();
-        $domainEvents = $this->getEvents();
-
-        $eventStore->storeEvent($domainEvents[0]);
-        $eventStore->storeEvent($domainEvents[1]);
+        $this->storeNumberOfEvents($eventStore, $aggregateId, 2);
 
         $events = [];
-        foreach ($eventStore->replyFromPosition($domainEvents[0]->getAggregateId()) as $event) {
+        foreach ($eventStore->replyFromPosition(new ReplyFromPositionQuery($aggregateId,)) as $event) {
             $events[] = $event;
         }
 
         $this->assertCount(2, $events);
+    }
+
+    public function testReplyFromPositionGreaterThanZero(): void
+    {
+        $aggregateId = Uuid::uuid4()->toString();
+        $eventStore = $this->createPdoEventStore();
+        $this->storeNumberOfEvents($eventStore, $aggregateId, 4);
+
+        $events = [];
+        foreach ($eventStore->replyFromPosition(new ReplyFromPositionQuery($aggregateId, 2)) as $event) {
+            $events[] = $event;
+        }
+
+        $this->assertCount(3, $events);
+    }
+
+    public function testReplyFromPositionWithAHigherPositionThanExisting(): void
+    {
+        $aggregateId = Uuid::uuid4()->toString();
+        $eventStore = $this->createPdoEventStore();
+        $this->storeNumberOfEvents($eventStore, $aggregateId, 5);
+
+        $events = [];
+        foreach ($eventStore->replyFromPosition(new ReplyFromPositionQuery($aggregateId, 100000)) as $event) {
+            $events[] = $event;
+        }
+
+        $this->assertCount(0, $events);
     }
 }

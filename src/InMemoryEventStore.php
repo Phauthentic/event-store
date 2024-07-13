@@ -7,6 +7,9 @@ namespace Phauthentic\EventStore;
 use EmptyIterator;
 use Iterator;
 
+/**
+ *
+ */
 class InMemoryEventStore implements EventStoreInterface
 {
     /**
@@ -24,14 +27,20 @@ class InMemoryEventStore implements EventStoreInterface
         $this->aggregates[$event->getAggregateId()][$eventCount + 1] = $event;
     }
 
-    public function replyFromPosition(string $aggregateId, int $position = 0): Iterator
+    public function replyFromPosition(ReplyFromPositionQuery $replyFromPositionQuery): Iterator
     {
-        if (!isset($this->aggregates[$aggregateId]) || empty($this->aggregates[$aggregateId])) {
+        $aggregateId = $replyFromPositionQuery->aggregateId;
+        $position = $replyFromPositionQuery->position;
+
+        if (
+            !isset($this->aggregates[$aggregateId])
+            || empty($this->aggregates[$aggregateId])
+        ) {
             return new EmptyIterator();
         }
 
         foreach ($this->aggregates[$aggregateId] as $storePosition => $event) {
-            if ($storePosition > $position) {
+            if ($storePosition >= $position) {
                 yield $event;
             }
         }

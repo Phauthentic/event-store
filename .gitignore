@@ -2,3 +2,6 @@
 /vendor/
 /bin/
 /.phpunit.cache/
+infection.log
+.env
+

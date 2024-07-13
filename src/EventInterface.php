@@ -7,7 +7,7 @@ namespace Phauthentic\EventStore;
 use DateTimeImmutable;
 
 /**
- * This DTO describes an event that was stored
+ * This DTO describes an event that was stored.
  */
 interface EventInterface
 {
