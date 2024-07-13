@@ -18,12 +18,14 @@ class PdoEventStoreTest extends AbstractEventStoreTestCase
 {
     public function setUp(): void
     {
-        parent::setUp();
-
         $pdo = $this->createPdo();
         $query = file_get_contents('./resources/event_store.sql');
         $pdo->query('use test');
         $pdo->query($query);
+
+        $this->eventStore = $this->createPdoEventStore();
+
+        parent::setUp();
     }
 
     protected function createPdo(): PDO
@@ -49,47 +51,5 @@ class PdoEventStoreTest extends AbstractEventStoreTestCase
             serializer: new SerializeSerializer(),
             eventFactory: new EventFactory()
         );
-    }
-
-    public function testReplyFromPositionZero(): void
-    {
-        $aggregateId = Uuid::uuid4()->toString();
-        $eventStore = $this->createPdoEventStore();
-        $this->storeNumberOfEvents($eventStore, $aggregateId, 2);
-
-        $events = [];
-        foreach ($eventStore->replyFromPosition(new ReplyFromPositionQuery($aggregateId,)) as $event) {
-            $events[] = $event;
-        }
-
-        $this->assertCount(2, $events);
-    }
-
-    public function testReplyFromPositionGreaterThanZero(): void
-    {
-        $aggregateId = Uuid::uuid4()->toString();
-        $eventStore = $this->createPdoEventStore();
-        $this->storeNumberOfEvents($eventStore, $aggregateId, 4);
-
-        $events = [];
-        foreach ($eventStore->replyFromPosition(new ReplyFromPositionQuery($aggregateId, 2)) as $event) {
-            $events[] = $event;
-        }
-
-        $this->assertCount(3, $events);
-    }
-
-    public function testReplyFromPositionWithAHigherPositionThanExisting(): void
-    {
-        $aggregateId = Uuid::uuid4()->toString();
-        $eventStore = $this->createPdoEventStore();
-        $this->storeNumberOfEvents($eventStore, $aggregateId, 5);
-
-        $events = [];
-        foreach ($eventStore->replyFromPosition(new ReplyFromPositionQuery($aggregateId, 100000)) as $event) {
-            $events[] = $event;
-        }
-
-        $this->assertCount(0, $events);
     }
 }

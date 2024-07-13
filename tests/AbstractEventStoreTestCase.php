@@ -8,14 +8,17 @@ use DateTimeImmutable;
 use Phauthentic\EventStore\Event;
 use Phauthentic\EventStore\EventInterface;
 use Phauthentic\EventStore\EventStoreInterface;
+use Phauthentic\EventStore\ReplyFromPositionQuery;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
 /**
  *
  */
-class AbstractEventStoreTestCase extends TestCase
+abstract class AbstractEventStoreTestCase extends TestCase
 {
+    protected ?EventStoreInterface $eventStore;
+
     /**
      * @param $numberOfEvents
      * @return array
@@ -57,5 +60,44 @@ class AbstractEventStoreTestCase extends TestCase
         foreach ($this->getEvents($aggregateId, $numberOfEvents) as $event) {
             $eventStore->storeEvent($event);
         }
+    }
+
+    public function testReplyFromPositionZero(): void
+    {
+        $aggregateId = Uuid::uuid4()->toString();
+        $this->storeNumberOfEvents($this->eventStore, $aggregateId, 2);
+
+        $events = [];
+        foreach ($this->eventStore->replyFromPosition(new ReplyFromPositionQuery($aggregateId, 1)) as $event) {
+            $events[] = $event;
+        }
+
+        $this->assertCount(2, $events);
+    }
+
+    public function testReplyFromPositionGreaterThanZero(): void
+    {
+        $aggregateId = Uuid::uuid4()->toString();
+        $this->storeNumberOfEvents($this->eventStore, $aggregateId, 4);
+
+        $events = [];
+        foreach ($this->eventStore->replyFromPosition(new ReplyFromPositionQuery($aggregateId, 2)) as $event) {
+            $events[] = $event;
+        }
+
+        $this->assertCount(3, $events);
+    }
+
+    public function testReplyFromPositionWithAHigherPositionThanExisting(): void
+    {
+        $aggregateId = Uuid::uuid4()->toString();
+        $this->storeNumberOfEvents($this->eventStore, $aggregateId, 5);
+
+        $events = [];
+        foreach ($this->eventStore->replyFromPosition(new ReplyFromPositionQuery($aggregateId, 100000)) as $event) {
+            $events[] = $event;
+        }
+
+        $this->assertCount(0, $events);
     }
 }

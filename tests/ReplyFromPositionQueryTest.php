@@ -6,11 +6,12 @@ namespace Phauthentic\EventStore\Tests;
 
 use Phauthentic\EventStore\Exception\EventStoreException;
 use Phauthentic\EventStore\ReplyFromPositionQuery;
+use PHPUnit\Framework\TestCase;
 
 /**
  *
  */
-class ReplyFromPositionQueryTest extends AbstractEventStoreTestCase
+class ReplyFromPositionQueryTest extends TestCase
 {
     public function testNegativePosition(): void
     {
