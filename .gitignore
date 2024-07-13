@@ -1,4 +1,7 @@
 .idea
 /vendor/
 /bin/
+/tmp/
 /.phpunit.cache/
+infection.log
+.env

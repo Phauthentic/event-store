@@ -10,5 +10,5 @@ interface EventStoreInterface
 {
     public function storeEvent(EventInterface $event): void;
 
-    public function replyFromPosition(string $aggregateId, int $position = 0): Iterator;
+    public function replyFromPosition(ReplyFromPositionQuery $fromPositionQuery): Iterator;
 }

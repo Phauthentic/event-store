@@ -9,21 +9,26 @@ use Phauthentic\EventStore\EventFactory;
 use Phauthentic\EventStore\PdoEventStore;
 use Phauthentic\EventStore\Serializer\SerializeSerializer;
 
+/**
+ *
+ */
 class PdoEventStoreTest extends AbstractEventStoreTestCase
 {
     public function setUp(): void
     {
-        parent::setUp();
-
         $pdo = $this->createPdo();
         $query = file_get_contents('./resources/event_store.sql');
         $pdo->query('use test');
         $pdo->query($query);
+
+        $this->eventStore = $this->createPdoEventStore();
+
+        parent::setUp();
     }
 
     protected function createPdo(): PDO
     {
-        $host = getenv('DB_HOST') ?: '127.0.0.1';
+        $host = getenv('DB_HOST') ?: 'mysql-container';
         $dbname = getenv('DB_DATABASE') ?: 'test';
         $user = getenv('DB_USER') ?: 'root';
         $pass = getenv('DB_PASSWORD') ?: 'changeme';
@@ -44,21 +49,5 @@ class PdoEventStoreTest extends AbstractEventStoreTestCase
             serializer: new SerializeSerializer(),
             eventFactory: new EventFactory()
         );
-    }
-
-    public function testReplyFromPositionZero(): void
-    {
-        $eventStore = $this->createPdoEventStore();
-        $domainEvents = $this->getEvents();
-
-        $eventStore->storeEvent($domainEvents[0]);
-        $eventStore->storeEvent($domainEvents[1]);
-
-        $events = [];
-        foreach ($eventStore->replyFromPosition($domainEvents[0]->getAggregateId()) as $event) {
-            $events[] = $event;
-        }
-
-        $this->assertCount(2, $events);
     }
 }

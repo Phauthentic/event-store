@@ -5,5 +5,7 @@ CREATE TABLE IF NOT EXISTS event_store (
     version INT NOT NULL,
     event VARCHAR(255) NOT NULL,
     payload TEXT NOT NULL,
-    created_at VARCHAR(128) NOT NULL
+    created_at VARCHAR(128) NOT NULL,
+    INDEX idx_aggregate_id (aggregate_id),
+    UNIQUE INDEX idx_aggregate_version (aggregate_id, version)
 );

@@ -4,11 +4,19 @@ declare(strict_types=1);
 
 namespace Phauthentic\EventStore;
 
+use Generator;
 use PDO;
+use PDOStatement;
 use Phauthentic\EventStore\Serializer\SerializerInterface;
 
 /**
- * PdoEventStore
+ * PDO Based Event Store
+ *
+ * This should work with
+ * - MySQL & MariaBD
+ * - PostgreSQL
+ * - SQLite
+ * - MS SQL Server
  */
 class PdoEventStore implements EventStoreInterface
 {
@@ -23,7 +31,9 @@ class PdoEventStore implements EventStoreInterface
     public function __construct(
         protected PDO $pdo,
         protected SerializerInterface $serializer,
-        protected EventFactoryInterface $eventFactory
+        protected EventFactoryInterface $eventFactory,
+        protected int $limit = 50,
+        protected SQLDialect $sqlDialect = SQLDialect::Standard
     ) {
     }
 
@@ -41,26 +51,46 @@ class PdoEventStore implements EventStoreInterface
         $columns = implode(', ', array_keys($values));
         $placeholders = implode(', ', array_fill(0, count($values), '?'));
 
-        $sql = "INSERT INTO " . static::EVENT_STORE_TABLE . " ($columns) VALUES ($placeholders)";
+        $sql = "INSERT INTO " . self::EVENT_STORE_TABLE . " ($columns) VALUES ($placeholders)";
         $statement = $this->pdo->prepare($sql);
 
         $statement->execute(array_values($values));
     }
 
-    public function replyFromPosition(string $aggregateId, int $position = 0): \Generator
+    protected function getSqlQuery(): string
     {
-        $sql = "SELECT * FROM " . static::EVENT_STORE_TABLE . " 
+        return "SELECT * FROM " . static::EVENT_STORE_TABLE . " 
                 WHERE aggregate_id = :aggregateId AND version >= :position 
                 ORDER BY version ASC 
-                LIMIT 50 OFFSET :offset";
+                LIMIT " . $this->limit . " OFFSET :offset";
+    }
 
-        $limit = 50;
+    protected function getMsSqlQuery(): string
+    {
+        return "SELECT * FROM " . static::EVENT_STORE_TABLE . " 
+                WHERE aggregate_id = :aggregateId AND version >= :position 
+                ORDER BY version ASC 
+                OFFSET :offset ROWS FETCH NEXT " . $this->limit . " ROWS ONLY";
+    }
+
+    protected function prepareReplyFromPositionStatement(): PDOStatement
+    {
+        return $this->sqlDialect === SQLDialect::MSSQL
+            ? $this->pdo->prepare($this->getMsSqlQuery())
+            : $this->pdo->prepare($this->getSqlQuery());
+    }
+
+    public function replyFromPosition(ReplyFromPositionQuery $fromPositionQuery): Generator
+    {
         $offset = 0;
+        $aggregateId = $fromPositionQuery->aggregateId;
+        $position = $fromPositionQuery->position;
+
+        $statement = $this->prepareReplyFromPositionStatement();
+        $statement->bindParam(':aggregateId', $aggregateId);
+        $statement->bindParam(':position', $position, PDO::PARAM_INT);
 
         do {
-            $statement = $this->pdo->prepare($sql);
-            $statement->bindParam(':aggregateId', $aggregateId, PDO::PARAM_STR);
-            $statement->bindParam(':position', $position, PDO::PARAM_INT);
             $statement->bindParam(':offset', $offset, PDO::PARAM_INT);
 
             $statement->execute();
@@ -70,7 +100,7 @@ class PdoEventStore implements EventStoreInterface
                 yield $this->mapResultToEvent($result);
             }
 
-            $offset += $limit;
+            $offset += $this->limit;
         } while (!empty($results));
     }
 
