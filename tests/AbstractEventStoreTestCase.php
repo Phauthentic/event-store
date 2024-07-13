@@ -13,7 +13,14 @@ use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 
 /**
+ * This class is thought to be used as a base class for testing all event stores.
  *
+ * In the setUp method, the event store **must** be initialized.
+ *
+ * This class provides the following tests:
+ * - testReplyFromPositionZero
+ * - testReplyFromPositionGreaterThanZero
+ * - testReplyFromPositionWithAHigherPositionThanExisting
  */
 abstract class AbstractEventStoreTestCase extends TestCase
 {

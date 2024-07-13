@@ -7,9 +7,7 @@ namespace Phauthentic\EventStore\Tests;
 use PDO;
 use Phauthentic\EventStore\EventFactory;
 use Phauthentic\EventStore\PdoEventStore;
-use Phauthentic\EventStore\ReplyFromPositionQuery;
 use Phauthentic\EventStore\Serializer\SerializeSerializer;
-use Ramsey\Uuid\Uuid;
 
 /**
  *
