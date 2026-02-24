@@ -53,7 +53,10 @@ class InMemoryEventStore implements EventStoreInterface
             return new EmptyIterator();
         }
 
-        foreach ($this->aggregates[$aggregateId] as $storePosition => $event) {
+        $events = $this->aggregates[$aggregateId];
+        ksort($events);
+
+        foreach ($events as $storePosition => $event) {
             if ($storePosition >= $position) {
                 yield $event;
             }

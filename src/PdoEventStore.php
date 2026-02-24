@@ -6,7 +6,9 @@ namespace Phauthentic\EventStore;
 
 use Generator;
 use PDO;
+use PDOException;
 use PDOStatement;
+use Phauthentic\EventStore\Exception\EventStoreException;
 use Phauthentic\EventStore\Serializer\SerializerInterface;
 
 /**
@@ -61,7 +63,31 @@ class PdoEventStore implements EventStoreInterface
         $sql = "INSERT INTO " . self::EVENT_STORE_TABLE . " ($columns) VALUES ($placeholders)";
         $statement = $this->pdo->prepare($sql);
 
-        $statement->execute(array_values($values));
+        try {
+            $statement->execute(array_values($values));
+        } catch (PDOException $e) {
+            if ($this->isDuplicateKeyError($e)) {
+                throw new EventStoreException(sprintf(
+                    'Duplicate event version %d for aggregate %s',
+                    $event->getAggregateVersion(),
+                    $event->getAggregateId()
+                ), 0, $e);
+            }
+            throw $e;
+        }
+    }
+
+    protected function isDuplicateKeyError(PDOException $e): bool
+    {
+        $code = $e->getCode();
+        $message = $e->getMessage();
+
+        return $code === '23000'
+            || $code === 23000
+            || str_contains($message, '23000')
+            || str_contains($message, '1062') // MySQL duplicate key
+            || str_contains($message, '23505') // PostgreSQL unique violation
+            || str_contains($message, 'UNIQUE constraint failed'); // SQLite
     }
 
     protected function getSqlQuery(): string

@@ -11,5 +11,5 @@ enum SQLDialect: string
 {
     case Standard = 'standard';
 
-    case MSSQL = 'sqlite';
+    case MSSQL = 'mssql';
 }

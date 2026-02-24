@@ -14,4 +14,10 @@ interface EventFactoryInterface
      * @return EventInterface
      */
     public function createEventFromArray(array $data): EventInterface;
+
+    /**
+     * @param EventInterface $event
+     * @return array<string, mixed>
+     */
+    public function arrayFromEvent(EventInterface $event): array;
 }

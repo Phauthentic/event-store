@@ -17,11 +17,11 @@ class EventFactory implements EventFactoryInterface
      */
     protected function assertArrayKeys(array $array): void
     {
-        $this->assertArrayHasKey($array, EventInterface::AGGREGATE_ID);
-        $this->assertArrayHasKey($array, EventInterface::PAYLOAD);
-        $this->assertArrayHasKey($array, EventInterface::EVENT);
-        $this->assertArrayHasKey($array, EventInterface::CREATED_AT);
-        $this->assertArrayHasKey($array, EventInterface::VERSION);
+        $this->requireArrayKey($array, EventInterface::AGGREGATE_ID);
+        $this->requireArrayKey($array, EventInterface::PAYLOAD);
+        $this->requireArrayKey($array, EventInterface::EVENT);
+        $this->requireArrayKey($array, EventInterface::CREATED_AT);
+        $this->requireArrayKey($array, EventInterface::VERSION);
     }
 
     /**
@@ -30,7 +30,7 @@ class EventFactory implements EventFactoryInterface
      * @return void
      * @throws AssertionException
      */
-    protected function assertArrayHasKey(array $array, string $key): void
+    protected function requireArrayKey(array $array, string $key): void
     {
         if (!isset($array[$key])) {
             throw AssertionException::arrayHasMissingKey($key);

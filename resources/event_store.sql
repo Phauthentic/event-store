@@ -8,6 +8,5 @@ CREATE TABLE IF NOT EXISTS event_store (
     created_at VARCHAR(128) NOT NULL,
     correlation_id VARCHAR(255) NULL,
     meta_data TEXT NULL,
-    INDEX idx_aggregate_id (aggregate_id),
     UNIQUE KEY unique_aggregate_version (aggregate_id, version)
 );

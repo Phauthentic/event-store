@@ -6,6 +6,7 @@ namespace Phauthentic\EventStore\Tests;
 
 use PDO;
 use Phauthentic\EventStore\EventFactory;
+use Phauthentic\EventStore\Exception\EventStoreException;
 use Phauthentic\EventStore\PdoEventStore;
 use Phauthentic\EventStore\ReplyFromPositionQuery;
 use Phauthentic\EventStore\Serializer\SerializeSerializer;
@@ -99,5 +100,21 @@ class PdoEventStoreTest extends AbstractEventStoreTestCase
         }
 
         $this->assertCount(2, $events);
+    }
+
+    public function testStoreEventThrowsOnDuplicateVersion(): void
+    {
+        if ($this->pdo === null) {
+            $this->markTestSkipped('No database driver available (pdo_sqlite or pdo_mysql required)');
+        }
+
+        $this->expectException(EventStoreException::class);
+        $this->expectExceptionMessage('Duplicate event version');
+
+        $eventStore = $this->createPdoEventStore();
+        $domainEvents = $this->getEvents();
+
+        $eventStore->storeEvent($domainEvents[0]);
+        $eventStore->storeEvent($domainEvents[0]);
     }
 }
