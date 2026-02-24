@@ -79,4 +79,122 @@ class EventFactoryTest extends TestCase
         $eventFactory = new EventFactory();
         $eventFactory->createEventFromArray($eventArray);
     }
+
+    public function testCreateEventFromArrayWithInvalidDate(): void
+    {
+        $this->expectException(\Phauthentic\EventStore\Exception\EventStoreException::class);
+        $this->expectExceptionMessage('Could not create date from string');
+
+        $eventArray = [
+            EventInterface::AGGREGATE_ID => '123',
+            EventInterface::VERSION => 1,
+            EventInterface::EVENT => 'some_event',
+            EventInterface::PAYLOAD => [],
+            EventInterface::CREATED_AT => 'invalid-date-format',
+        ];
+
+        $eventFactory = new EventFactory();
+        $eventFactory->createEventFromArray($eventArray);
+    }
+
+    public function testCreateEventFromArrayWithDateTimeObject(): void
+    {
+        $createdAt = DateTimeImmutable::createFromFormat(
+            EventInterface::CREATED_AT_FORMAT,
+            static::TEST_DATE
+        );
+        $eventArray = [
+            EventInterface::AGGREGATE_ID => '123',
+            EventInterface::VERSION => 1,
+            EventInterface::EVENT => 'some_event',
+            EventInterface::PAYLOAD => [],
+            EventInterface::CREATED_AT => $createdAt,
+        ];
+
+        $eventFactory = new EventFactory();
+        $event = $eventFactory->createEventFromArray($eventArray);
+
+        $this->assertSame($createdAt, $event->getCreatedAt());
+    }
+
+    public function testCreateEventFromArrayWithStream(): void
+    {
+        $eventArray = [
+            EventInterface::AGGREGATE_ID => '123',
+            EventInterface::VERSION => 1,
+            EventInterface::EVENT => 'some_event',
+            EventInterface::PAYLOAD => [],
+            EventInterface::CREATED_AT => static::TEST_DATE,
+            EventInterface::STREAM => 'my-stream',
+        ];
+
+        $eventFactory = new EventFactory();
+        $event = $eventFactory->createEventFromArray($eventArray);
+
+        $this->assertSame('my-stream', $event->getStream());
+    }
+
+    public function testCreateEventFromArrayWithMissingPayloadKey(): void
+    {
+        $this->expectException(AssertionException::class);
+        $this->expectExceptionMessage('Array has a missing key payload');
+
+        $eventArray = [
+            EventInterface::AGGREGATE_ID => '123',
+            EventInterface::VERSION => 1,
+            EventInterface::EVENT => 'some_event',
+            EventInterface::CREATED_AT => static::TEST_DATE,
+        ];
+
+        $eventFactory = new EventFactory();
+        $eventFactory->createEventFromArray($eventArray);
+    }
+
+    public function testCreateEventFromArrayWithMissingEventKey(): void
+    {
+        $this->expectException(AssertionException::class);
+        $this->expectExceptionMessage('Array has a missing key event');
+
+        $eventArray = [
+            EventInterface::AGGREGATE_ID => '123',
+            EventInterface::VERSION => 1,
+            EventInterface::PAYLOAD => [],
+            EventInterface::CREATED_AT => static::TEST_DATE,
+        ];
+
+        $eventFactory = new EventFactory();
+        $eventFactory->createEventFromArray($eventArray);
+    }
+
+    public function testCreateEventFromArrayWithMissingVersionKey(): void
+    {
+        $this->expectException(AssertionException::class);
+        $this->expectExceptionMessage('Array has a missing key version');
+
+        $eventArray = [
+            EventInterface::AGGREGATE_ID => '123',
+            EventInterface::EVENT => 'some_event',
+            EventInterface::PAYLOAD => [],
+            EventInterface::CREATED_AT => static::TEST_DATE,
+        ];
+
+        $eventFactory = new EventFactory();
+        $eventFactory->createEventFromArray($eventArray);
+    }
+
+    public function testCreateEventFromArrayWithMissingCreatedAtKey(): void
+    {
+        $this->expectException(AssertionException::class);
+        $this->expectExceptionMessage('Array has a missing key createdAt');
+
+        $eventArray = [
+            EventInterface::AGGREGATE_ID => '123',
+            EventInterface::VERSION => 1,
+            EventInterface::EVENT => 'some_event',
+            EventInterface::PAYLOAD => [],
+        ];
+
+        $eventFactory = new EventFactory();
+        $eventFactory->createEventFromArray($eventArray);
+    }
 }

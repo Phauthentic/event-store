@@ -61,14 +61,14 @@ class EventFactory implements EventFactoryInterface
      */
     protected function setDefaults(array $array): array
     {
-        !isset($array[EventInterface::STREAM]) ?: $array[EventInterface::STREAM] = null;
-
         if (!isset($array[EventInterface::STREAM])) {
             $array[EventInterface::STREAM] = null;
         }
 
         if (!isset($array[EventInterface::CREATED_AT])) {
+            // @codeCoverageIgnoreStart - unreachable: assertArrayKeys requires CREATED_AT
             $array[EventInterface::CREATED_AT] = new DateTimeImmutable();
+            // @codeCoverageIgnoreEnd
         }
 
         if (is_string($array[EventInterface::CREATED_AT])) {

@@ -17,4 +17,13 @@ class InMemoryEventStoreTest extends AbstractEventStoreTestCase
 
         parent::setUp();
     }
+
+    public function testReplyFromPositionWithNonExistentAggregate(): void
+    {
+        $eventStore = new InMemoryEventStore();
+
+        $events = iterator_to_array($eventStore->replyFromPosition('non-existent-id'));
+
+        $this->assertCount(0, $events);
+    }
 }
