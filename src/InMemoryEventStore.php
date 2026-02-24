@@ -6,6 +6,7 @@ namespace Phauthentic\EventStore;
 
 use EmptyIterator;
 use Iterator;
+use Phauthentic\EventStore\Exception\EventStoreException;
 
 /**
  *
@@ -19,12 +20,25 @@ class InMemoryEventStore implements EventStoreInterface
 
     public function storeEvent(EventInterface $event): void
     {
-        $eventCount = 0;
-        if (isset($this->aggregates[$event->getAggregateId()])) {
-            $eventCount = count($this->aggregates[$event->getAggregateId()]);
+        $aggregateId = $event->getAggregateId();
+        $version = $event->getAggregateVersion();
+
+        if ($version < 1) {
+            throw new EventStoreException(sprintf(
+                'Event version must be positive, got %d',
+                $version
+            ));
         }
 
-        $this->aggregates[$event->getAggregateId()][$eventCount + 1] = $event;
+        if (isset($this->aggregates[$aggregateId][$version])) {
+            throw new EventStoreException(sprintf(
+                'Duplicate event version %d for aggregate %s',
+                $version,
+                $aggregateId
+            ));
+        }
+
+        $this->aggregates[$aggregateId][$version] = $event;
     }
 
     public function replyFromPosition(ReplyFromPositionQuery $replyFromPositionQuery): Iterator

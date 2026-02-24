@@ -65,6 +65,14 @@ class EventFactory implements EventFactoryInterface
             $array[EventInterface::STREAM] = null;
         }
 
+        if (!isset($array[EventInterface::CORRELATION_ID])) {
+            $array[EventInterface::CORRELATION_ID] = '';
+        }
+
+        if (!isset($array[EventInterface::META_DATA])) {
+            $array[EventInterface::META_DATA] = [];
+        }
+
         if (!isset($array[EventInterface::CREATED_AT])) {
             // @codeCoverageIgnoreStart - unreachable: assertArrayKeys requires CREATED_AT
             $array[EventInterface::CREATED_AT] = new DateTimeImmutable();
@@ -89,7 +97,9 @@ class EventFactory implements EventFactoryInterface
             aggregateVersion: $array[EventInterface::VERSION],
             event: $array[EventInterface::EVENT],
             payload: $array[EventInterface::PAYLOAD],
-            createdAt: $array[EventInterface::CREATED_AT]
+            createdAt: $array[EventInterface::CREATED_AT],
+            correlationId: $array[EventInterface::CORRELATION_ID],
+            metaData: $array[EventInterface::META_DATA]
         );
     }
 

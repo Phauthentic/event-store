@@ -52,6 +52,11 @@ interface EventInterface
     public function getCreatedAt(): DateTimeImmutable;
 
     /**
+     * @return string|null
+     */
+    public function getCorrelationId(): ?string;
+
+    /**
      * @return array<string, mixed>
      */
     public function getMetaData(): array;

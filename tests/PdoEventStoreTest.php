@@ -26,7 +26,9 @@ class PdoEventStoreTest extends AbstractEventStoreTestCase
             return;
         }
 
-        $schemaFile = $this->isSqlite() ? './resources/event_store_sqlite.sql' : './resources/event_store.sql';
+        $schemaFile = $this->isSqlite()
+            ? __DIR__ . '/../resources/event_store_sqlite.sql'
+            : __DIR__ . '/../resources/event_store.sql';
         $query = file_get_contents($schemaFile);
         if (!$this->isSqlite()) {
             $this->pdo->exec('USE test');

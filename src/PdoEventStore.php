@@ -27,6 +27,8 @@ class PdoEventStore implements EventStoreInterface
     public const EVENT = 'event';
     public const PAYLOAD = 'payload';
     public const CREATED_AT = 'created_at';
+    public const CORRELATION_ID = 'correlation_id';
+    public const META_DATA = 'meta_data';
 
     public function __construct(
         protected PDO $pdo,
@@ -39,6 +41,9 @@ class PdoEventStore implements EventStoreInterface
 
     public function storeEvent(EventInterface $event): void
     {
+        $correlationId = $event->getCorrelationId();
+        $metaData = $event->getMetaData();
+
         $values = [
             self::STREAM => $event->getStream(),
             self::AGGREGATE_ID => $event->getAggregateId(),
@@ -46,6 +51,8 @@ class PdoEventStore implements EventStoreInterface
             self::EVENT => $event->getEvent(),
             self::PAYLOAD => $this->serializer->serialize($event->getPayload()),
             self::CREATED_AT => $event->getCreatedAt()->format(EventInterface::CREATED_AT_FORMAT),
+            self::CORRELATION_ID => $correlationId !== null && $correlationId !== '' ? $correlationId : null,
+            self::META_DATA => $metaData !== [] ? $this->serializer->serialize($metaData) : null,
         ];
 
         $columns = implode(', ', array_keys($values));
@@ -110,13 +117,20 @@ class PdoEventStore implements EventStoreInterface
      */
     protected function mapResultToEvent(array $result): EventInterface
     {
+        $payload = $this->serializer->unserialize($result[self::PAYLOAD]);
+        $metaData = isset($result[self::META_DATA])
+            ? $this->serializer->unserialize($result[self::META_DATA])
+            : [];
+
         return $this->eventFactory->createEventFromArray([
             EventInterface::STREAM => $result[self::STREAM],
             EventInterface::AGGREGATE_ID => $result[self::AGGREGATE_ID],
             EventInterface::EVENT => $result[self::EVENT],
-            EventInterface::PAYLOAD => $this->serializer->unserialize($result[self::PAYLOAD]),
+            EventInterface::PAYLOAD => $payload,
             EventInterface::CREATED_AT => $result[self::CREATED_AT],
-            EventInterface::VERSION => $result[self::VERSION],
+            EventInterface::VERSION => (int) $result[self::VERSION],
+            EventInterface::CORRELATION_ID => $result[self::CORRELATION_ID] ?? '',
+            EventInterface::META_DATA => $metaData,
         ]);
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Phauthentic\EventStore;
 
-use DateTime;
 use DateTimeImmutable;
 use Phauthentic\EventStore\Exception\AssertionException;
 
@@ -113,7 +112,8 @@ class Event implements EventInterface
             EventInterface::EVENT => $this->getEvent(),
             EventInterface::PAYLOAD => $this->getPayload(),
             EventInterface::CREATED_AT => $this->getCreatedAt()->format(EventInterface::CREATED_AT_FORMAT),
-            EventInterface::CORRELATION_ID => $this->getCorrelationId()
+            EventInterface::CORRELATION_ID => $this->getCorrelationId(),
+            EventInterface::META_DATA => $this->getMetaData(),
         ];
     }
 }
