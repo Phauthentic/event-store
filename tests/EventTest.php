@@ -97,7 +97,8 @@ class EventTest extends TestCase
             EventInterface::EVENT => $event,
             EventInterface::PAYLOAD => $payload,
             EventInterface::CREATED_AT => $createdAt->format(EventInterface::CREATED_AT_FORMAT),
-            EventInterface::CORRELATION_ID => $correlationId
+            EventInterface::CORRELATION_ID => $correlationId,
+            EventInterface::META_DATA => $metaData,
         ];
 
         $this->assertEquals($expectedArray, $eventObject->toArray());

@@ -23,6 +23,7 @@ class PdoEventStoreTest extends AbstractEventStoreTestCase
 
         $this->pdo = $this->createPdo();
         if ($this->pdo === null) {
+            $this->markTestSkipped('No database driver available (pdo_sqlite or pdo_mysql required)');
             return;
         }
 
